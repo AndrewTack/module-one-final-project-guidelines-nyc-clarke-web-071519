@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(version: 20190729200349) do
   create_table "usergames", force: :cascade do |t|
     t.integer "user_id"
     t.integer "game_id"
+    t.string  "player_role"
   end
 
   create_table "users", force: :cascade do |t|
