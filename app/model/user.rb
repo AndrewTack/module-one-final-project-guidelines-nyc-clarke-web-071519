@@ -8,22 +8,26 @@ class User < ActiveRecord::Base
     has_many :usergames
     has_many :games, through: :usergames
 
-
-    # #Create gameboard
-    # def create_new_game
-    #     Game.new
-    #     Usergame.new(self.id, ?????????, "creator")
-    # end
-
-    # #Send gameboard
-    # def send_gameboard(friend)
-    #     Usergame.new(friend, ?????????, "receivers")
-    # end
+    def matches
+        my_matches = []
+        my_matches << self.followees
+        my_matches << self.followers
+        my_matches.flatten.uniq
+    end
 
     # #View received gameboards
-    # def view_receieved_gameboards
-    #     self.usergames.select {|game| game.player_role == "receiver"}
-    # end
+    def view_receieved_gameboards
+        #list of games where user is the "receiver"
+        received_gameboards_array = self.usergames.select {|game| game.player_role == "receiver"}
+        #return the length of this list
+        received_gameboards_array.length
+    end
+
+    #View created gameboards
+    def view_created_gameboards
+        created_gameboards_array = self.usergames.select {|game| game.player_role == "creator"}
+        created_gameboards_array.length
+    end
 
     # #Choose gameboard to play
     # def choose_gameboard #(user_input)

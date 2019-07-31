@@ -14,6 +14,12 @@ Usergame.destroy_all
     User.create(name: Faker::Name.first_name)
 end
 
+greg = User.create(name: 'Greg')
+
+10.times do 
+    greg.followers << User.all.sample
+end 
+
 5.times do
     Game.create
 end
