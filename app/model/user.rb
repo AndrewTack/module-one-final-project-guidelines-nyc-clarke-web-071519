@@ -15,7 +15,7 @@ class User < ActiveRecord::Base
         my_matches.flatten.uniq
     end
 
-    # #View received gameboards
+    #View received gameboards
     def view_receieved_gameboards
         #list of games where user is the "receiver"
         received_gameboards_array = self.usergames.select {|game| game.player_role == "receiver"}
@@ -23,55 +23,8 @@ class User < ActiveRecord::Base
 
     #View created gameboards
     def view_created_gameboards
+        #list of games where user is the "creator"
         created_gameboards_array = self.usergames.select {|game| game.player_role == "creator"}
-        created_gameboards_array
     end
-
-    # #Choose gameboard to play
-    # def choose_gameboard #(user_input)
-    #     games_list = self.usergames.all {|usergame| puts usergame}
-    #     puts "Hey #{self.name}! Welcome to Break Mode. Which of your games would you like to play?"
-    #     user_input = gets.chomp
-    #     games_list.find do |games| 
-    #         if games == user_input
-    #             games
-    #         else
-    #             puts "Couldn't find this game. Please choose from your list of available games!"
-    #         end
-    #     end
-    # end
-
-    # #play_game
-    # def play_game(choose_gameboard)
-    #     puts "Let's Break the Ice! Which of these people are you most interested in connecting with?"
-    #     user_input = gets.chomp
-    #     puts "You've selected #{user_input}! Is this your final answer?"
-    #     #Yes/No prompt?
-    #     if self.name == user_input
-    #         Match.new
-    #         puts "It's a Match!"
-    #     else 
-    #         puts "No Match! Thanks for playing."
-    #     end
-    #     # delete game
-    #     #back to main menu...
-    # end
-
-    # #delete game
-    # def delete_game(choose_gameboard)
-    #     delete_current_game = self.usergames.all.delete(choose_gameboard)
-    # end
-
-
-
-    # # def created_games ##    that haven't been played yet
-    # #     created_user_games = self.usergames.select {|game| game.player_role == "creator"}
-    #     #   games = create_user_games.map {|usergame| usergame.game}
-    #     #   find_users_for_each_game = games.map {|game| game.users}
-    # # end
-
-    # # def received_games
-    # #     self.usergames.select {|game| game.player_role == "receiver"}
-    # # end
 
 end

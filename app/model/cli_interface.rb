@@ -19,7 +19,6 @@ def view_my_matches
 
     go_back = @prompt.keypress("Press any key when you're ready to return to Main Menu")
     main_menu
-
 end 
 
 def main_menu
@@ -68,16 +67,17 @@ def create_new_game
     current_game = Game.create
     Usergame.create(user_id: @current_user.id, game_id: current_game.id, player_role: "creator")
   
-    # Add Receiver to gameboard
-    name_array = User.all.map {|user| user.name}
+    # Add Receiver to Gameboard
+    name_array = User.where("name != ?", @current_user.name).pluck(:name)
     single_response = @prompt.select("Choose someone you're interested in to receive this gameboard.", name_array)
     receiver_instance = User.all.find_by(name: single_response)
     Usergame.create(user_id: receiver_instance.id, game_id: current_game.id, player_role: "receiver")
    
-    # Add Pawns to gameboard
-    #want to have more specific selection process here...
-    #Select your competition. Who do you want #{single_response} choosing between? Pick at least 1 competitor or at most 3.
-    #Once a receiver is selected, they shouldn't be a pawn option
+    # Add Pawns to Gameboard
+    #Want to have more specific selection process here...
+        #Select your competition. Who do you want #{single_response} choosing between? Pick at least 1 competitor or at most 3.
+    #Once a receiver is selected, they shouldn't be a pawn option...
+        #think this one is working now
     pawn_name_array = name_array.delete(receiver_instance.name)
     selection_response = @prompt.multi_select("Select your competition.", name_array)
     selection_response.each do |user_name|
@@ -88,8 +88,7 @@ def create_new_game
     #Now that this board has been created. Send this board.
     send_board = @prompt.yes?("Are you ready to send this gameboard?")
     if send_board 
-        #need to actually send board
-        #Game.create
+        #need to actually send board?
         #Usergame.create(user_id: @current_user.id, game_id: current_game.id, player_role: "creator")
         puts "Gameboard sent! Hopefully the ice will be broken with #{single_response}. Check back in your My Matches soon."
         sent_but_unplayed
@@ -115,7 +114,8 @@ def play_gameboard
 
             #Get a list of users associated with this game
             specific_game = received_gameboards[0].game
-            game_name_array = specific_game.users.map {|user| user.name}
+            #game_name_array = specific_game.users.map {|user| user.name} THIS IS OLD, was giving our player a gameboard with themselves in it
+            game_name_array = specific_game.users.where("name != ?", @current_user.name).pluck(:name)
             gameboard = @prompt.select("Who are you most interested in?", game_name_array)
                 #with the select above, does gameboard == a value(name in the form of a string) or a just a boolean (like with select.yes?)?
             
@@ -184,4 +184,4 @@ def log_out
     exit
 end
 
-#login_or_signup
+login_or_signup
