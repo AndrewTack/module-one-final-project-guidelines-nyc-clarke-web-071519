@@ -1,6 +1,6 @@
 class Usergame < ActiveRecord::Base
 
     belongs_to :user 
-    belongs_to :game #, dependent: destroy
+    belongs_to :game
 
 end

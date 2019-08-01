@@ -114,30 +114,41 @@ def play_gameboard
         if ready_to_play
 
             #Get a list of users associated with this game
-            game_name_array = received_gameboards[0].game.users.map {|user| user.name}
+            specific_game = received_gameboards[0].game
+            game_name_array = specific_game.users.map {|user| user.name}
             gameboard = @prompt.select("Who are you most interested in?", game_name_array)
-            #if MATCH --- if selected == creator
-                if gameboard == this_games_creator
-                    specific_game = Usergame.find_by(game_id: game_id)
-                    this_games_creator = specific_game.find_by(player_role: "creator")
-        
+                #with the select above, does gameboard == a value(name in the form of a string) or a just a boolean (like with select.yes?)?
+            
+                #if MATCH --- if selected == creator 
+                this_games_creator = specific_game.usergames.find_by(player_role: "creator")
+
+                if gameboard == this_games_creator.user.name
+                    
                     puts "It's a Match!"
-                #create an instance of a match...
-                # creator_id = Usergame.all.find_by(player_role: "creator") #for this specific game_id though
-                # Match.create(follower_id: creator_id, followee_id: @current_user.id)
-                #view_my_matches
+                    
+                    #create an instance of a match...
+                    # creator_id = Usergame.all.find_by(player_role: "creator") #for this specific game_id though
+                    # Match.create(follower_id: creator_id, followee_id: @current_user.id)
+                
+                    #delete one Game from database (not usergame), rerun method to update count
+                    #dependent destroy. method added to belongs_to/has_many
+                    specific_game.destroy 
+
+                    #view_my_matches
+
                 else
-                puts "No Match! Thanks for playing."
-                go_back = @prompt.keypress("Press any key when you're ready to return to Main Menu")
-                main_menu
+
+                    puts "No Match! Thanks for playing."
+                
+                    #delete one Game from database (not usergame), rerun method to update count
+                    #dependent destroy. method added to belongs_to/has_many
+                    specific_game.destroy
+
+                    go_back = @prompt.keypress("Press any key when you're ready to return to Main Menu")
+                    main_menu
                 end
 
-            #
-            #delete one Game from database (not usergame), rerun method to update count
-            #dependent destroy. method added to belongs_to/has_many
-            #game.destroy
 
-            #main_menu here or will it go to the outside go_back prompt?
 
         else 
             main_menu
@@ -163,7 +174,6 @@ def sent_but_unplayed
         main_menu
     end
 
-
     #delete one Game from database (not usergame), rerun method to update count
     #game.destroy 
 
@@ -174,25 +184,4 @@ def log_out
     exit
 end
 
-    # #play_game
-    # def play_game(choose_gameboard)
-    #     puts "Let's Break the Ice! Which of these people are you most interested in connecting with?"
-    #     user_input = gets.chomp
-    #     puts "You've selected #{user_input}! Is this your final answer?"
-    #     #Yes/No prompt?
-    #     if self.name == user_input
-    #         Match.new
-    #         puts "It's a Match!"
-    #     else 
-    #         puts "No Match! Thanks for playing."
-    #     end
-    #     # delete game
-    #     #back to main menu...
-    # end
-
-    # #delete game
-    # def delete_game(choose_gameboard)
-    #     delete_current_game = self.usergames.all.delete(choose_gameboard)
-    # end
-
-login_or_signup
+#login_or_signup

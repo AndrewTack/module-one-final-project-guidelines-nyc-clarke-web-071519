@@ -19,8 +19,6 @@ class User < ActiveRecord::Base
     def view_receieved_gameboards
         #list of games where user is the "receiver"
         received_gameboards_array = self.usergames.select {|game| game.player_role == "receiver"}
-        #return the length of this list
-        received_gameboards_array
     end
 
     #View created gameboards
@@ -75,25 +73,5 @@ class User < ActiveRecord::Base
     # # def received_games
     # #     self.usergames.select {|game| game.player_role == "receiver"}
     # # end
-
-    # #view my matches
-    # def view_my_matches
-    #     self.matches.select {|match| match.follower_id == self.id || match.followee_id == self.id}
-    # end
-
-    # #view options tab
-    # def view_options(user_input)
-    #     options =   "
-    #         1) 
-
-    #                     "
-    #     if user_input == "Options"
-    #         puts options
-    #     end
-    # end
-    
-    #exit game --- does this need a method?
-    
-
 
 end
