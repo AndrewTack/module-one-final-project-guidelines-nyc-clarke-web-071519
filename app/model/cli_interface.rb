@@ -10,7 +10,6 @@ require 'tty-prompt'
 @prompt = TTY::Prompt.new
 @current_user = nil
 
-#view matches
 def view_my_matches
     if @current_user.matches.length > 0
         @current_user.matches.each {|match| puts match.name}
@@ -65,70 +64,115 @@ def signup
     main_menu
 end
 
- #Create gameboard
-    #how do I shift all of this over with fancy buttons?
-    def create_new_game
-            current_game = Game.create
-            Usergame.create(user_id: @current_user.id, game_id: current_game.id, player_role: "creator")
+def create_new_game
+    current_game = Game.create
+    Usergame.create(user_id: @current_user.id, game_id: current_game.id, player_role: "creator")
+  
+    # Add Receiver to gameboard
+    name_array = User.all.map {|user| user.name}
+    single_response = @prompt.select("Choose someone you're interested in to receive this gameboard.", name_array)
+    receiver_instance = User.all.find_by(name: single_response)
+    Usergame.create(user_id: receiver_instance.id, game_id: current_game.id, player_role: "receiver")
+   
+    # Add Pawns to gameboard
+    #want to have more specific selection process here...
+    #Select your competition. Who do you want #{single_response} choosing between? Pick at least 1 competitor or at most 3.
+    #Once a receiver is selected, they shouldn't be a pawn option
+    pawn_name_array = name_array.delete(receiver_instance.name)
+    selection_response = @prompt.multi_select("Select your competition.", name_array)
+    selection_response.each do |user_name|
+        pawn_id = User.all.find_by(name: user_name) 
+        Usergame.create(user_id: pawn_id.id, game_id: current_game.id, player_role: "pawn")
+    end
 
-            # Add Pawns to gameboard
-            name_array = User.all.map {|user| user.name}
-            #want to have more specific selection process here...
-            #Select your competition. Who do you want #{single_response} choosing between? Pick at least 1 competitor or at most 3.
-            selection_response = @prompt.multi_select("Select your competition.", name_array)
-            selection_response.each do |user_name| 
-                pawn_id = User.all.find_by(name: user_name)
-                Usergame.create(user_id: pawn_id.id, game_id: current_game.id, player_role: "pawn")
-            end
-
-            # Add Receiver to gameboard
-            # To bump this to before selecting competition... just move above?
-            single_response = @prompt.select("Choose a receiver.", name_array)
-            receiver_id = User.all.find_by(name: single_response)
-            Usergame.create(user_id: receiver_id.id, game_id: current_game.id, player_role: "receiver")
-
-            #Now that this board has been created. Send this board?
-            send_board = @prompt.yes?("Are you ready to send this gameboard?")
-            if send_board
+    #Now that this board has been created. Send this board.
+    send_board = @prompt.yes?("Are you ready to send this gameboard?")
+    if send_board 
+        #need to actually send board
+        #Game.create
+        #Usergame.create(user_id: @current_user.id, game_id: current_game.id, player_role: "creator")
+        puts "Gameboard sent! Hopefully the ice will be broken with #{single_response}. Check back in your My Matches soon."
+        sent_but_unplayed
+    else
+        puts "No need to chicken out! If #{single_response} doesn't break the ice, they won't even know it was you that sent this board."
+        are_you_sure = @prompt.yes?("Are you sure you don't want to send this board?")
+            if are_you_sure
+                main_menu
+            else 
                 puts "Gameboard sent! Hopefully the ice will be broken with #{single_response}. Check back in your My Matches soon."
                 sent_but_unplayed
-            else
-                puts "No need to chicken out! If #{single_response} doesn't break the ice, they won't even know it was you that sent this board."
-                #@prompt.yes?("Are you sure you don't want to send this board?")
-                    #if no
-                        #main_menu
-                    #end
             end
     end
+end
 
-    def play_gameboard
+def play_gameboard
 
-        #View number received gameboards 
-        received_gameboards = @current_user.view_receieved_gameboards
-        @prompt.yes?("You have #{received_gameboards} games to play. Are you ready to play your next game?")  
-        #if yes... play
-        #if no... @prompt.yes?("Back to Main Menu?")
-            #if yes... main_menu
-            #if no back to original prompt
+    #View number of received gameboards 
+    received_gameboards = @current_user.view_receieved_gameboards
+    if received_gameboards.length > 0
+    ready_to_play = @prompt.yes?("You have #{received_gameboards.length} games to play. Are you ready to play your next game?")  
+        if ready_to_play
 
-        #usergame.game.users to get a list of all users associated with this game. 
-        #then can prompt to play this game
-
-        #delete one from count ... received_gameboards -= 1
-    end
-
-    def sent_but_unplayed
-        sent_gameboards = @current_user.view_created_gameboards
-        @prompt.keypress("You've sent #{sent_gameboards} games that are yet to be played. Don't worry, they'll be played soon! \n Press any key to return to the Main Menu.")  
-        main_menu
+            #Get a list of users associated with this game
+            game_name_array = received_gameboards[0].game.users.map {|user| user.name}
+            gameboard = @prompt.select("Who are you most interested in?", game_name_array)
+            #if MATCH --- if selected == creator
+                if gameboard == this_games_creator
+                    specific_game = Usergame.find_by(game_id: game_id)
+                    this_games_creator = specific_game.find_by(player_role: "creator")
         
-        #delete one from count ... sent_gameboards -= 1
+                    puts "It's a Match!"
+                #create an instance of a match...
+                # creator_id = Usergame.all.find_by(player_role: "creator") #for this specific game_id though
+                # Match.create(follower_id: creator_id, followee_id: @current_user.id)
+                #view_my_matches
+                else
+                puts "No Match! Thanks for playing."
+                go_back = @prompt.keypress("Press any key when you're ready to return to Main Menu")
+                main_menu
+                end
+
+            #
+            #delete one Game from database (not usergame), rerun method to update count
+            #dependent destroy. method added to belongs_to/has_many
+            #game.destroy
+
+            #main_menu here or will it go to the outside go_back prompt?
+
+        else 
+            main_menu
+        end
+    else
+        puts "No Gameboards to play yet!"
     end
 
-    def log_out
-        puts "Thanks for playing!"
-        exit
+    go_back = @prompt.keypress("Press any key when you're ready to return to Main Menu")
+    main_menu
+
+end
+
+def sent_but_unplayed
+    sent_gameboards_count = @current_user.view_created_gameboards.length
+
+    if sent_gameboards_count > 0
+        @prompt.keypress("You've sent #{sent_gameboards_count} games that are yet to be played. Don't worry, they'll be played soon! \n Press any key to return to the Main Menu.")  
+        main_menu
+    else 
+        puts "You've sent #{sent_gameboards_count} games that are yet to be played."
+        go_back = @prompt.keypress("Press any key when you're ready to return to Main Menu")
+        main_menu
     end
+
+
+    #delete one Game from database (not usergame), rerun method to update count
+    #game.destroy 
+
+end
+
+def log_out
+    puts "Thanks for playing!"
+    exit
+end
 
     # #play_game
     # def play_game(choose_gameboard)

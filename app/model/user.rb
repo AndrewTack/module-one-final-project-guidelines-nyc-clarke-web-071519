@@ -20,13 +20,13 @@ class User < ActiveRecord::Base
         #list of games where user is the "receiver"
         received_gameboards_array = self.usergames.select {|game| game.player_role == "receiver"}
         #return the length of this list
-        received_gameboards_array.length
+        received_gameboards_array
     end
 
     #View created gameboards
     def view_created_gameboards
         created_gameboards_array = self.usergames.select {|game| game.player_role == "creator"}
-        created_gameboards_array.length
+        created_gameboards_array
     end
 
     # #Choose gameboard to play
