@@ -4,17 +4,9 @@ User.destroy_all
 Game.destroy_all
 Usergame.destroy_all
 
-# user_names = ["Greg", "Varun", "Andrew"]
-
-# user_names.each do |user_name|
-#     User.create(name: user_name)
-# end
-
 25.times do 
     User.create(name: Faker::Name.first_name)
 end
-
-greg = User.create(name: 'Greg')
 
 10.times do 
     greg.followers << User.all.sample

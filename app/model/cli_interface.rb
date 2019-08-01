@@ -38,11 +38,13 @@ def main_menu
 end 
 
 def login_or_signup
-    response = @prompt.select("Log In or Sign Up?", %w(LogIn SignUp))
+    response = @prompt.select("Log In or Sign Up?", %w(LogIn SignUp LogOut))
     if response == "LogIn"
         login
-    else
+    elsif response == "SignUp"
         signup
+    else
+        log_out    
     end
 end
 
@@ -77,8 +79,6 @@ def create_new_game
     # Add Pawns to Gameboard
     #Want to have more specific selection process here...
         #Select your competition. Who do you want #{single_response} choosing between? Pick at least 1 competitor or at most 3.
-    #Once a receiver is selected, they shouldn't be a pawn option...
-        #think this one is working now
     pawn_name_array = name_array.delete(receiver_instance.name)
     selection_response = @prompt.multi_select("Select your competition.", name_array)
     selection_response.each do |user_name|
@@ -89,8 +89,6 @@ def create_new_game
     #Now that this board has been created. Send this board.
     send_board = @prompt.yes?("Are you ready to send this gameboard?")
     if send_board 
-        #need to actually send board?
-        #Usergame.create(user_id: @current_user.id, game_id: current_game.id, player_role: "creator")
         puts "Gameboard sent! Hopefully the ice will be broken with #{single_response}. Check back in your My Matches soon."
         sent_but_unplayed
     else
@@ -107,6 +105,8 @@ end
 
 def play_gameboard
 
+    @current_user.reload
+
     #View number of received gameboards 
     received_gameboards = @current_user.view_receieved_gameboards
     if received_gameboards.length > 0
@@ -115,14 +115,12 @@ def play_gameboard
 
             #Get a list of users associated with this game
             specific_game = received_gameboards[0].game
-            #game_name_array = specific_game.users.map {|user| user.name} THIS IS OLD, was giving our player a gameboard with themselves in it
             game_name_array = specific_game.users.where("name != ?", @current_user.name).pluck(:name)
             gameboard = @prompt.select("Who are you most interested in?", game_name_array)
-                #with the select above, does gameboard == a value(name in the form of a string) or a just a boolean (like with select.yes?)?
             
-                #if MATCH --- if selected == creator 
                 this_games_creator = specific_game.usergames.find_by(player_role: "creator")
-
+                
+                #if if selected (aka result of gameboard prompt) == the creator/sender of this gameboard,  there's a MATCH
                 if gameboard == this_games_creator.user.name
                     
                     puts "It's a Match!"
@@ -130,8 +128,7 @@ def play_gameboard
                     #create an instance of a match...
                     Match.create(follower_id: this_games_creator.user.id, followee_id: @current_user.id)
                 
-                    #delete one Game from database (not usergame), rerun method to update count
-                    #dependent destroy. method added to belongs_to/has_many
+                    #delete one game from database (not Usergame)
                     specific_game.destroy 
 
                     view_my_matches
@@ -140,15 +137,12 @@ def play_gameboard
 
                     puts "No Match! Thanks for playing."
                 
-                    #delete one Game from database (not usergame), rerun method to update count
-                    #dependent destroy. method added to belongs_to/has_many
+                    #delete one game from database (not Usergame)
                     specific_game.destroy
 
                     go_back = @prompt.keypress("Press any key when you're ready to return to Main Menu")
                     main_menu
                 end
-
-
 
         else 
             main_menu
@@ -163,6 +157,9 @@ def play_gameboard
 end
 
 def sent_but_unplayed
+
+    @current_user.reload
+    
     sent_gameboards_count = @current_user.view_created_gameboards.length
 
     if sent_gameboards_count > 0
@@ -173,9 +170,6 @@ def sent_but_unplayed
         go_back = @prompt.keypress("Press any key when you're ready to return to Main Menu")
         main_menu
     end
-
-    #delete one Game from database (not usergame), rerun method to update count
-    #game.destroy 
 
 end
 
