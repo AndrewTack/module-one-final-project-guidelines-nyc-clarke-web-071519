@@ -12,6 +12,7 @@ require 'tty-prompt'
 
 def view_my_matches
     if @current_user.matches.length > 0
+        puts "My Matches Are..."
         @current_user.matches.each {|match| puts match.name}
     else
         puts "No Matches yet!"
@@ -127,14 +128,13 @@ def play_gameboard
                     puts "It's a Match!"
                     
                     #create an instance of a match...
-                    # creator_id = Usergame.all.find_by(player_role: "creator") #for this specific game_id though
-                    # Match.create(follower_id: creator_id, followee_id: @current_user.id)
+                    Match.create(follower_id: this_games_creator.user.id, followee_id: @current_user.id)
                 
                     #delete one Game from database (not usergame), rerun method to update count
                     #dependent destroy. method added to belongs_to/has_many
                     specific_game.destroy 
 
-                    #view_my_matches
+                    view_my_matches
 
                 else
 
