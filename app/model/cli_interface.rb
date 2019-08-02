@@ -1,14 +1,50 @@
 require_relative '../../config/environment.rb'
-require "sinatra/activerecord"
-require 'pry'
+require_relative '../../animation_script.rb'
+# require "sinatra/activerecord"
+# require 'pry'
 require_relative './user.rb'
 require_relative './game.rb'
 require_relative './match.rb'
 require_relative './usergame.rb'
 
-require 'tty-prompt'
-@prompt = TTY::Prompt.new
+
+# require 'tty-prompt'
+  
+@font = TTY::Font.new(:starwars)
+@pastel = Pastel.new
+@prompt = TTY::Prompt.new   
 @current_user = nil
+
+
+def title
+    puts @pastel.blue.bold("Welcome to:")
+    puts @pastel.blue(@font.write("ICEBREAKER"))
+    sleep(0.75)
+    puts @pastel.on_magenta.bold("Are you interested in dating a Friend, but aren't sure how to break the ice?")
+    puts @pastel.on_magenta.bold("We're here to help. All you have to do Create and Send a GameBoard to this friend.")
+    puts @pastel.on_magenta.bold("If they’re interested in connecting, Ice Breaker will break the ice!")
+    sleep(0.5)
+end
+
+def bar
+    bars = TTY::ProgressBar::Multi.new("Loading [:bar] :percent")
+
+    bar1 = bars.register("Breaking Ice... [:bar] :percent", total: 15)
+    bar2 = bars.register("Grilling Cheese... [:bar] :percent", total: 15)
+    bar3 = bars.register("Lifting Weights... [:bar] :percent", total: 15)
+    bar4 = bars.register("Finding Love... [:bar] :percent", total: 15)
+    bar5 = bars.register("Doing Actual Work... [:bar] :percent", total: 15)
+ 
+    bars.start
+    
+    th1 = Thread.new { 15.times { sleep(0.2); bar1.advance } }
+    th2 = Thread.new { 15.times { sleep(0.1); bar2.advance } }
+    th3 = Thread.new { 15.times { sleep(0.1); bar3.advance } }
+    th4 = Thread.new { 15.times { sleep(0.1); bar4.advance } }
+    th5 = Thread.new { 15.times { sleep(0.1); bar5.advance } }
+    
+    [th1, th2, th3, th4].each { |t| t.join }
+end
 
 def view_my_matches
     if @current_user.matches.length > 0
@@ -55,7 +91,6 @@ def login
         main_menu
     else
         puts "Your username wasn't found. Please try again."
-        sleep 2
         login_or_signup
     end
 end
@@ -123,7 +158,7 @@ def play_gameboard
                 #if if selected (aka result of gameboard prompt) == the creator/sender of this gameboard,  there's a MATCH
                 if gameboard == this_games_creator.user.name
                     
-                    puts "It's a Match!"
+                    system ("echo Its a Match | lolcat -a -d 50")
                     
                     #create an instance of a match...
                     Match.create(follower_id: this_games_creator.user.id, followee_id: @current_user.id)
@@ -178,4 +213,7 @@ def log_out
     exit
 end
 
+bar
+# animation
+title
 login_or_signup
