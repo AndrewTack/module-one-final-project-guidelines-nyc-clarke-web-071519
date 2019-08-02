@@ -66,26 +66,7 @@ def signup
     main_menu
 end
 
-def create_new_game
-    current_game = Game.create
-    Usergame.create(user_id: @current_user.id, game_id: current_game.id, player_role: "creator")
-  
-    # Add Receiver to Gameboard
-    name_array = User.where("name != ?", @current_user.name).pluck(:name)
-    single_response = @prompt.select("Choose someone you're interested in to receive this gameboard.", name_array)
-    receiver_instance = User.all.find_by(name: single_response)
-    Usergame.create(user_id: receiver_instance.id, game_id: current_game.id, player_role: "receiver")
-   
-    # Add Pawns to Gameboard
-    #Want to have more specific selection process here...
-        #Select your competition. Who do you want #{single_response} choosing between? Pick at least 1 competitor or at most 3.
-    pawn_name_array = name_array.delete(receiver_instance.name)
-    selection_response = @prompt.multi_select("Select your competition.", name_array)
-    selection_response.each do |user_name|
-        pawn_id = User.all.find_by(name: user_name) 
-        Usergame.create(user_id: pawn_id.id, game_id: current_game.id, player_role: "pawn")
-    end
-
+def send_this_board(current_game, single_response)
     #Now that this board has been created. Send this board.
     send_board = @prompt.yes?("Are you ready to send this gameboard?")
     if send_board 
@@ -95,12 +76,55 @@ def create_new_game
         puts "No need to chicken out! If #{single_response} doesn't break the ice, they won't even know it was you that sent this board."
         are_you_sure = @prompt.yes?("Are you sure you don't want to send this board?")
             if are_you_sure
+                current_game.destroy
                 main_menu
             else 
                 puts "Gameboard sent! Hopefully the ice will be broken with #{single_response}. Check back in your My Matches soon."
                 sent_but_unplayed
+                main_menu
             end
     end
+end
+
+#Add Pawns to Gameboard, then call send_this_board
+def spawn_pawns(name_array, receiver_instance, current_game, single_response)
+    pawn_name_array = name_array.delete(receiver_instance.name)
+    selection_response = @prompt.multi_select("Select your competition. Who do you want #{single_response} choosing between? \nPick at least 1 Competitor or at most 4...", name_array)
+
+    if selection_response.length == 0
+        puts "Select at least 1 person to compete against."
+        #re-prompt
+        spawn_pawns(name_array, receiver_instance, current_game, single_response)
+    end
+
+    if selection_response.length > 4
+        puts "Select at most 4 people to compete against."
+        #re-prompt
+        spawn_pawns(name_array, receiver_instance, current_game, single_response)
+    end
+
+    selection_response.each do |user_name|
+        pawn_id = User.all.find_by(name: user_name) 
+        Usergame.create(user_id: pawn_id.id, game_id: current_game.id, player_role: "pawn")
+    end
+    
+    #once board is created, send this board
+    send_this_board(current_game, single_response)
+end
+
+def create_new_game
+    current_game = Game.create
+    Usergame.create(user_id: @current_user.id, game_id: current_game.id, player_role: "creator")
+  
+    # Add Receiver to Gameboard
+    name_array = User.where("name != ?", @current_user.name).pluck(:name)
+    single_response = @prompt.select("Choose someone you're interested in to receive this gameboard.", name_array)
+    receiver_instance = User.all.find_by(name: single_response)
+    Usergame.create(user_id: receiver_instance.id, game_id: current_game.id, player_role: "receiver")
+
+    #Add Pawns to Gameboard
+    #this method will also trigger the sending of this board
+    spawn_pawns(name_array, receiver_instance, current_game, single_response)
 end
 
 def play_gameboard
